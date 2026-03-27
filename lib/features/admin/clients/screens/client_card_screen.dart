@@ -12,6 +12,10 @@ import 'package:kati_pilates/shared/utils/date_formatter.dart';
 import 'package:kati_pilates/shared/widgets/avatar_circle.dart';
 import 'package:kati_pilates/features/card/widgets/session_card_visual.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+// ignore: unused_import
+import 'package:kati_pilates/features/admin/clients/screens/create_card_screen.dart';
+// ignore: unused_import
+import 'package:kati_pilates/features/admin/clients/screens/client_booking_history_screen.dart';
 
 final _profileRepoProvider = Provider<ProfileRepository>((ref) {
   return ProfileRepository(Supabase.instance.client);
@@ -93,6 +97,15 @@ class ClientCardScreen extends ConsumerWidget {
             // Client info header
             _buildClientHeader(context, profile),
             const SizedBox(height: 24),
+
+            // Always show booking history link
+            _ManagementRow(
+              icon: Icons.history_rounded,
+              title: 'Broneeringute ajalugu',
+              subtitle: 'Vaata kõiki broneeringuid',
+              onTap: () => context.push('/admin/clients/$userId/history'),
+            ),
+            const Divider(indent: 20, endIndent: 20),
 
             if (card == null)
               _buildNoCard(context)
@@ -239,6 +252,16 @@ class ClientCardScreen extends ConsumerWidget {
             subtitle: 'Taastab kaardi kehtivuse',
             onTap: () => _confirmUnpause(context, ref, card),
           ),
+
+        const Divider(indent: 20, endIndent: 20),
+
+        // Create new card
+        _ManagementRow(
+          icon: Icons.add_card_rounded,
+          title: 'Loo uus kaart',
+          subtitle: 'Loo kliendile uus sessioonkaart',
+          onTap: () => context.push('/admin/clients/$userId/create-card'),
+        ),
       ],
     );
   }
@@ -418,6 +441,12 @@ class ClientCardScreen extends ConsumerWidget {
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     color: AppColors.textSecondary,
                   ),
+            ),
+            const SizedBox(height: 16),
+            FilledButton.icon(
+              onPressed: () => context.push('/admin/clients/$userId/create-card'),
+              icon: const Icon(Icons.add_card_rounded),
+              label: const Text('Loo uus kaart'),
             ),
           ],
         ),
