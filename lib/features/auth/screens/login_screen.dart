@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:kati_pilates/config/routes.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:kati_pilates/config/routes.dart' show RoutePaths, checkUserRole;
 import 'package:kati_pilates/config/theme.dart';
 import 'package:kati_pilates/providers/auth_provider.dart';
 
@@ -37,16 +38,26 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         email: _emailController.text.trim(),
         password: _passwordController.text,
       );
-      // On success, GoRouter redirect handles navigation
+      // Fetch user role before GoRouter redirect fires
+      await checkUserRole();
+      // GoRouter redirect handles navigation automatically
     } catch (e) {
       if (mounted) {
+        String errorMsg = 'Sisselogimine ebaõnnestus. Kontrolli oma andmeid.';
+        if (e is AuthException) {
+          errorMsg = 'Auth error: ${e.message}';
+        } else {
+          errorMsg = 'Error: $e';
+        }
+        debugPrint('Login error: $e');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Sisselogimine ebaonnestus. Kontrolli oma andmeid.',
+              errorMsg,
               style: const TextStyle(color: Colors.white),
             ),
             backgroundColor: AppColors.error,
+            duration: const Duration(seconds: 5),
           ),
         );
       }

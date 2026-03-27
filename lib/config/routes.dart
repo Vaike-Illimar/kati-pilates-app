@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -65,12 +66,42 @@ final _clientShellKey = GlobalKey<NavigatorState>();
 final _adminShellKey = GlobalKey<NavigatorState>();
 
 // ---------------------------------------------------------------------------
+// Listenable that notifies GoRouter when auth state changes
+// ---------------------------------------------------------------------------
+class _GoRouterRefreshStream extends ChangeNotifier {
+  _GoRouterRefreshStream(Stream<AuthState> stream) {
+    notifyListeners();
+    _subscription = stream.listen((authState) async {
+      // Fetch user role before notifying the router
+      if (authState.event == AuthChangeEvent.signedIn ||
+          authState.event == AuthChangeEvent.tokenRefreshed) {
+        await checkUserRole();
+      } else if (authState.event == AuthChangeEvent.signedOut) {
+        _isAdminUser = null;
+      }
+      notifyListeners();
+    });
+  }
+
+  late final StreamSubscription<AuthState> _subscription;
+
+  @override
+  void dispose() {
+    _subscription.cancel();
+    super.dispose();
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Router
 // ---------------------------------------------------------------------------
 final GoRouter appRouter = GoRouter(
   navigatorKey: _rootNavigatorKey,
   initialLocation: RoutePaths.schedule,
   debugLogDiagnostics: true,
+  refreshListenable: _GoRouterRefreshStream(
+    Supabase.instance.client.auth.onAuthStateChange,
+  ),
   redirect: _authGuard,
   routes: [
     // ---- Auth routes ----
@@ -268,20 +299,60 @@ final GoRouter appRouter = GoRouter(
 );
 
 // ---------------------------------------------------------------------------
+// Cached admin role for the current user (avoids DB call on every redirect)
+// ---------------------------------------------------------------------------
+bool? _isAdminUser;
+
+/// Fetches user role from profiles table and caches it.
+Future<void> checkUserRole() async {
+  final user = Supabase.instance.client.auth.currentUser;
+  if (user == null) {
+    _isAdminUser = null;
+    return;
+  }
+  try {
+    final data = await Supabase.instance.client
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+    final role = data['role'] as String?;
+    _isAdminUser = (role == 'admin' || role == 'instructor');
+  } catch (_) {
+    _isAdminUser = false;
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Auth redirect guard
 // ---------------------------------------------------------------------------
 String? _authGuard(BuildContext context, GoRouterState state) {
   final session = Supabase.instance.client.auth.currentSession;
   final isLoggedIn = session != null;
   final isAuthRoute = state.matchedLocation.startsWith('/auth');
+  final isAdminRoute = state.matchedLocation.startsWith('/admin');
 
   // Not logged in and not on auth page → redirect to login
   if (!isLoggedIn && !isAuthRoute) {
+    _isAdminUser = null;
     return RoutePaths.login;
   }
 
-  // Logged in but on auth page → redirect to schedule
+  // Logged in but on auth page → redirect based on role
   if (isLoggedIn && isAuthRoute) {
+    if (_isAdminUser == true) {
+      return RoutePaths.adminCalendar;
+    }
+    return RoutePaths.schedule;
+  }
+
+  // Logged in admin on client route → redirect to admin
+  if (isLoggedIn && _isAdminUser == true && !isAdminRoute && !isAuthRoute) {
+    return RoutePaths.adminCalendar;
+  }
+
+  // Logged in non-admin on admin route → redirect to client
+  if (isLoggedIn && _isAdminUser != true && isAdminRoute) {
     return RoutePaths.schedule;
   }
 
