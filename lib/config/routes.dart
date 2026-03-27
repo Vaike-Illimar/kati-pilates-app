@@ -27,6 +27,7 @@ import 'package:kati_pilates/features/admin/notifications/screens/select_recipie
 import 'package:kati_pilates/features/admin/notifications/screens/notification_sent_screen.dart';
 import 'package:kati_pilates/shared/widgets/bottom_nav_bar.dart';
 import 'package:kati_pilates/shared/widgets/admin_bottom_nav_bar.dart';
+import 'package:kati_pilates/shared/widgets/waitlist_promotion_banner.dart';
 
 // ---------------------------------------------------------------------------
 // Route path constants
@@ -369,12 +370,14 @@ class _ClientShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: navigationShell,
-      bottomNavigationBar: BottomNavBar(
-        currentIndex: navigationShell.currentIndex,
-        onDestinationSelected: (index) =>
-            navigationShell.goBranch(index, initialLocation: index == navigationShell.currentIndex),
+    return WaitlistPromotionListener(
+      child: Scaffold(
+        body: navigationShell,
+        bottomNavigationBar: BottomNavBar(
+          currentIndex: navigationShell.currentIndex,
+          onDestinationSelected: (index) =>
+              navigationShell.goBranch(index, initialLocation: index == navigationShell.currentIndex),
+        ),
       ),
     );
   }
