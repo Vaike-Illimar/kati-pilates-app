@@ -1,0 +1,42 @@
+name: kati_pilates
+description: "Kati Pilates - stuudio broneerimisrakendus"
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.11.4
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+  supabase_flutter: any
+  flutter_riverpod: any
+  riverpod_annotation: any
+  go_router: any
+  freezed_annotation: any
+  json_annotation: any
+  google_fonts: any
+  cached_network_image: any
+  shimmer: any
+  intl: any
+  image_picker: any
+  url_launcher: any
+  timeago: any
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: any
+  build_runner: any
+  freezed: any
+  json_serializable: any
+  riverpod_generator: any
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/
