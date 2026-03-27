@@ -34,9 +34,60 @@ dev_dependencies:
   freezed: any
   json_serializable: any
   riverpod_generator: any
+  flutter_launcher_icons: any
+  flutter_native_splash: any
 
 flutter:
   uses-material-design: true
 
   assets:
     - assets/images/
+    - assets/icons/
+
+# ---------------------------------------------------------------------------
+# App Icon configuration
+# Place your app icon at assets/icons/app_icon.png (1024x1024 recommended)
+# Run: dart run flutter_launcher_icons
+# ---------------------------------------------------------------------------
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/icons/app_icon.png"
+  min_sdk_android: 21
+
+  # Adaptive icon (Android 8.0+)
+  adaptive_icon_background: "#F5F0EB"  # AppColors.background
+  adaptive_icon_foreground: "assets/icons/app_icon_foreground.png"
+
+  # Web icon (optional)
+  web:
+    generate: false
+
+# ---------------------------------------------------------------------------
+# Splash screen configuration
+# Brand colors: background #F5F0EB, primary #7B6B8A
+# Run: dart run flutter_native_splash:create
+# ---------------------------------------------------------------------------
+flutter_native_splash:
+  # Background color (AppColors.background = #F5F0EB warm beige)
+  color: "#F5F0EB"
+
+  # Logo image shown on splash screen
+  image: assets/icons/app_icon.png
+
+  # On Android 12+, use a different image for the splash screen
+  android_12:
+    image: assets/icons/app_icon.png
+    color: "#F5F0EB"
+    icon_background_color: "#7B6B8A"
+
+  # Dark mode variant (same warm palette)
+  color_dark: "#2D2D2D"
+  image_dark: assets/icons/app_icon.png
+
+  # Fullscreen splash (hides status bar)
+  fullscreen: false
+
+  # Orientation (portrait for this app)
+  android_gravity: center
+  ios_content_mode: scaleAspectFit
