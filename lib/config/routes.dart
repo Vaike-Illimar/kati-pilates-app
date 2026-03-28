@@ -10,6 +10,7 @@ import 'package:kati_pilates/features/bookings/screens/bookings_screen.dart';
 import 'package:kati_pilates/features/bookings/screens/booking_confirmed_screen.dart';
 import 'package:kati_pilates/models/booking.dart';
 import 'package:kati_pilates/models/admin_notification.dart';
+import 'package:kati_pilates/models/class_definition.dart';
 import 'package:kati_pilates/features/fixed_group/screens/fixed_group_invitation_screen.dart';
 import 'package:kati_pilates/features/fixed_group/screens/my_fixed_group_screen.dart';
 import 'package:kati_pilates/features/card/screens/card_screen.dart';
@@ -25,6 +26,12 @@ import 'package:kati_pilates/features/admin/notifications/screens/admin_notifica
 import 'package:kati_pilates/features/admin/notifications/screens/create_notification_screen.dart';
 import 'package:kati_pilates/features/admin/notifications/screens/select_recipients_screen.dart';
 import 'package:kati_pilates/features/admin/notifications/screens/notification_sent_screen.dart';
+import 'package:kati_pilates/features/admin/calendar/screens/admin_calendar_screen.dart';
+import 'package:kati_pilates/features/admin/calendar/screens/admin_instance_screen.dart';
+import 'package:kati_pilates/features/admin/classes/screens/class_definitions_screen.dart';
+import 'package:kati_pilates/features/admin/classes/screens/edit_class_definition_screen.dart';
+import 'package:kati_pilates/features/admin/studios/screens/studios_screen.dart';
+import 'package:kati_pilates/features/admin/instructors/screens/instructors_screen.dart';
 import 'package:kati_pilates/features/admin/clients/screens/create_card_screen.dart';
 import 'package:kati_pilates/features/admin/clients/screens/client_booking_history_screen.dart';
 import 'package:kati_pilates/shared/widgets/bottom_nav_bar.dart';
@@ -59,6 +66,11 @@ class RoutePaths {
   static const String adminGroups = '/admin/groups';
   static const String adminClients = '/admin/clients';
   static const String adminSettings = '/admin/settings';
+
+  // Admin calendar nested
+  static const String adminClassDefinitions = '/admin/calendar/class-definitions';
+  static const String adminStudios = '/admin/calendar/studios';
+  static const String adminInstructors = '/admin/calendar/instructors';
 }
 
 // ---------------------------------------------------------------------------
@@ -204,14 +216,46 @@ final GoRouter appRouter = GoRouter(
       builder: (context, state, navigationShell) =>
           _AdminShell(navigationShell: navigationShell),
       branches: [
-        // Tab 0 – Kalender (placeholder — schedule management TBD)
+        // Tab 0 – Kalender
         StatefulShellBranch(
           navigatorKey: _adminShellKey,
           routes: [
             GoRoute(
               path: RoutePaths.adminCalendar,
-              builder: (context, state) =>
-                  const _PlaceholderScreen(title: 'Kalender'),
+              builder: (context, state) => const AdminCalendarScreen(),
+              routes: [
+                GoRoute(
+                  path: 'instance/:instanceId',
+                  builder: (context, state) => AdminInstanceScreen(
+                    instanceId: state.pathParameters['instanceId']!,
+                  ),
+                ),
+                GoRoute(
+                  path: 'class-definitions',
+                  builder: (context, state) => const ClassDefinitionsScreen(),
+                  routes: [
+                    GoRoute(
+                      path: 'new',
+                      builder: (context, state) =>
+                          const EditClassDefinitionScreen(),
+                    ),
+                    GoRoute(
+                      path: ':defId',
+                      builder: (context, state) => EditClassDefinitionScreen(
+                        existing: state.extra as ClassDefinition?,
+                      ),
+                    ),
+                  ],
+                ),
+                GoRoute(
+                  path: 'studios',
+                  builder: (context, state) => const StudiosScreen(),
+                ),
+                GoRoute(
+                  path: 'instructors',
+                  builder: (context, state) => const InstructorsScreen(),
+                ),
+              ],
             ),
           ],
         ),
