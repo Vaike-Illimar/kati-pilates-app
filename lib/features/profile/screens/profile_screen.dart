@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:kati_pilates/config/theme.dart';
 import 'package:kati_pilates/providers/auth_provider.dart';
 import 'package:kati_pilates/providers/notification_provider.dart';
+import 'package:kati_pilates/providers/realtime_notification_provider.dart';
 import 'package:kati_pilates/providers/fixed_group_provider.dart';
 import 'package:kati_pilates/shared/widgets/avatar_circle.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -86,7 +87,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final user = ref.watch(currentUserProvider);
-    final unreadAsync = ref.watch(unreadCountProvider);
+    // Use real-time unread count for live badge updates
+    final unreadAsync = ref.watch(realtimeUnreadCountProvider);
     final myGroupsAsync = ref.watch(myGroupsProvider);
 
     if (user == null) {
