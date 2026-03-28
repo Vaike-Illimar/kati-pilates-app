@@ -25,6 +25,8 @@ import 'package:kati_pilates/features/admin/notifications/screens/admin_notifica
 import 'package:kati_pilates/features/admin/notifications/screens/create_notification_screen.dart';
 import 'package:kati_pilates/features/admin/notifications/screens/select_recipients_screen.dart';
 import 'package:kati_pilates/features/admin/notifications/screens/notification_sent_screen.dart';
+import 'package:kati_pilates/features/admin/clients/screens/create_card_screen.dart';
+import 'package:kati_pilates/features/admin/clients/screens/client_booking_history_screen.dart';
 import 'package:kati_pilates/shared/widgets/bottom_nav_bar.dart';
 import 'package:kati_pilates/shared/widgets/admin_bottom_nav_bar.dart';
 import 'package:kati_pilates/shared/widgets/waitlist_promotion_banner.dart';
@@ -258,6 +260,18 @@ final GoRouter appRouter = GoRouter(
                       builder: (context, state) => PauseCardScreen(
                         userId: state.pathParameters['userId']!,
                         cardId: state.pathParameters['cardId']!,
+                      ),
+                    ),
+                    GoRoute(
+                      path: 'create-card',
+                      builder: (context, state) => CreateCardScreen(
+                        userId: state.pathParameters['userId']!,
+                      ),
+                    ),
+                    GoRoute(
+                      path: 'history',
+                      builder: (context, state) => ClientBookingHistoryScreen(
+                        userId: state.pathParameters['userId']!,
                       ),
                     ),
                   ],
