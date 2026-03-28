@@ -5,6 +5,7 @@ import 'package:timeago/timeago.dart' as timeago;
 import 'package:kati_pilates/config/theme.dart';
 import 'package:kati_pilates/providers/auth_provider.dart';
 import 'package:kati_pilates/providers/notification_provider.dart';
+import 'package:kati_pilates/providers/realtime_notification_provider.dart';
 import 'package:kati_pilates/shared/widgets/empty_state.dart';
 import 'package:kati_pilates/features/notifications/widgets/notification_item.dart';
 
@@ -33,13 +34,8 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
   }
 
   Future<void> _markAllAsRead() async {
-    final user = ref.read(currentUserProvider);
-    if (user == null) return;
-
-    final notifRepo = ref.read(notificationRepositoryProvider);
-    await notifRepo.markAllAsRead(user.id);
-    ref.invalidate(notificationsProvider);
-    ref.invalidate(unreadCountProvider);
+    // Use the real-time notifier which handles mark all read and updates state
+    await ref.read(realtimeNotificationsProvider.notifier).markAllAsRead();
   }
 
   Future<void> _onNotificationTap(
@@ -48,10 +44,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     String? actionUrl,
   ) async {
     if (!isRead) {
-      final notifRepo = ref.read(notificationRepositoryProvider);
-      await notifRepo.markAsRead(notificationId);
-      ref.invalidate(notificationsProvider);
-      ref.invalidate(unreadCountProvider);
+      await ref.read(realtimeNotificationsProvider.notifier).markAsRead(notificationId);
     }
 
     if (actionUrl != null && actionUrl.isNotEmpty && mounted) {
@@ -61,7 +54,8 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final notificationsAsync = ref.watch(notificationsProvider);
+    // Use real-time provider — updates instantly when new notifications arrive
+    final notificationsAsync = ref.watch(realtimeNotificationsProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -122,8 +116,8 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                   return RefreshIndicator(
                     color: AppColors.primary,
                     onRefresh: () async {
-                      ref.invalidate(notificationsProvider);
-                      ref.invalidate(unreadCountProvider);
+                      ref.invalidate(realtimeNotificationsProvider);
+                      ref.invalidate(realtimeUnreadCountProvider);
                     },
                     child: ListView.separated(
                       padding: const EdgeInsets.symmetric(
@@ -143,11 +137,9 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                           ),
                           onMarkRead: () async {
                             if (!notification.isRead) {
-                              final notifRepo =
-                                  ref.read(notificationRepositoryProvider);
-                              await notifRepo.markAsRead(notification.id);
-                              ref.invalidate(notificationsProvider);
-                              ref.invalidate(unreadCountProvider);
+                              await ref
+                                  .read(realtimeNotificationsProvider.notifier)
+                                  .markAsRead(notification.id);
                             }
                           },
                         );

@@ -13,6 +13,7 @@ import 'package:kati_pilates/shared/utils/greeting_helper.dart';
 import 'package:kati_pilates/shared/widgets/avatar_circle.dart';
 import 'package:kati_pilates/shared/widgets/class_card_widget.dart';
 import 'package:kati_pilates/shared/widgets/empty_state.dart';
+import 'package:kati_pilates/shared/widgets/shimmer_loading.dart';
 import 'package:kati_pilates/shared/widgets/weekday_selector.dart';
 
 class ScheduleScreen extends ConsumerWidget {
@@ -143,16 +144,7 @@ class ScheduleScreen extends ConsumerWidget {
 
               // -- Class list --
               scheduleAsync.when(
-                loading: () => const SliverToBoxAdapter(
-                  child: Padding(
-                    padding: EdgeInsets.only(top: 48),
-                    child: Center(
-                      child: CircularProgressIndicator(
-                        color: AppColors.primary,
-                      ),
-                    ),
-                  ),
-                ),
+                loading: () => const ScheduleShimmer(itemCount: 5),
                 error: (error, stack) => SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.all(20),

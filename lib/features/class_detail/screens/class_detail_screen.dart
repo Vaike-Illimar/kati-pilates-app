@@ -9,6 +9,7 @@ import 'package:kati_pilates/providers/card_provider.dart';
 import 'package:kati_pilates/providers/schedule_provider.dart';
 import 'package:kati_pilates/shared/utils/date_formatter.dart';
 import 'package:kati_pilates/shared/widgets/avatar_circle.dart';
+import 'package:kati_pilates/shared/widgets/realtime_availability.dart';
 
 /// Provider to fetch a single class instance by ID.
 final classDetailProvider =
@@ -104,7 +105,9 @@ class _ClassDetailScreenState extends ConsumerState<ClassDetailScreen> {
           final isFull = classInstance.availableSpots <= 0;
           final activeCard = activeCardAsync.value;
 
-          return Column(
+          return RealtimeAvailabilityListener(
+            classInstanceId: classInstance.id,
+            child: Column(
             children: [
               // Scrollable content
               Expanded(
@@ -162,7 +165,7 @@ class _ClassDetailScreenState extends ConsumerState<ClassDetailScreen> {
                 cardId: activeCard?.id,
               ),
             ],
-          );
+          ));
         },
       ),
     );

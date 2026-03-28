@@ -1,19 +1,94 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:kati_pilates/config/theme.dart';
 import 'package:kati_pilates/providers/auth_provider.dart';
 import 'package:kati_pilates/providers/notification_provider.dart';
+import 'package:kati_pilates/providers/realtime_notification_provider.dart';
 import 'package:kati_pilates/providers/fixed_group_provider.dart';
 import 'package:kati_pilates/shared/widgets/avatar_circle.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-class ProfileScreen extends ConsumerWidget {
+class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends ConsumerState<ProfileScreen> {
+  bool _isUploading = false;
+
+  Future<void> _pickAndUploadPhoto() async {
+    final user = ref.read(currentUserProvider);
+    if (user == null) return;
+
+    final picker = ImagePicker();
+    final picked = await picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 512,
+      maxHeight: 512,
+      imageQuality: 85,
+    );
+    if (picked == null || !mounted) return;
+
+    setState(() => _isUploading = true);
+
+    try {
+      final bytes = await picked.readAsBytes();
+      final ext = picked.name.split('.').last.toLowerCase();
+      final fileName = '${user.id}/avatar.$ext';
+
+      // Upload to Supabase Storage bucket 'avatars'
+      await Supabase.instance.client.storage
+          .from('avatars')
+          .uploadBinary(
+            fileName,
+            bytes,
+            fileOptions: FileOptions(
+              contentType: 'image/$ext',
+              upsert: true,
+            ),
+          );
+
+      // Get public URL
+      final publicUrl = Supabase.instance.client.storage
+          .from('avatars')
+          .getPublicUrl(fileName);
+
+      // Update profile
+      await Supabase.instance.client.from('profiles').update({
+        'avatar_url': publicUrl,
+        'updated_at': DateTime.now().toIso8601String(),
+      }).eq('id', user.id);
+
+      // Update user metadata (for immediate reflection)
+      await Supabase.instance.client.auth.updateUser(
+        UserAttributes(data: {'avatar_url': publicUrl}),
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Profiilipilt uuendatud!')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Pildi üleslaadimine ebaõnnestus: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isUploading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final user = ref.watch(currentUserProvider);
-    final unreadAsync = ref.watch(unreadCountProvider);
+    // Use real-time unread count for live badge updates
+    final unreadAsync = ref.watch(realtimeUnreadCountProvider);
     final myGroupsAsync = ref.watch(myGroupsProvider);
 
     if (user == null) {
@@ -75,11 +150,42 @@ class ProfileScreen extends ConsumerWidget {
             children: [
               const SizedBox(height: 32),
 
-              // Avatar
-              AvatarCircle(
-                name: fullName,
-                imageUrl: avatarUrl,
-                size: 80,
+              // Avatar with upload button
+              Stack(
+                children: [
+                  AvatarCircle(
+                    name: fullName,
+                    imageUrl: avatarUrl,
+                    size: 80,
+                  ),
+                  Positioned(
+                    bottom: 0,
+                    right: 0,
+                    child: GestureDetector(
+                      onTap: _isUploading ? null : _pickAndUploadPhoto,
+                      child: Container(
+                        width: 28,
+                        height: 28,
+                        decoration: BoxDecoration(
+                          color: AppColors.primary,
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                              color: AppColors.background, width: 2),
+                        ),
+                        child: _isUploading
+                            ? const Padding(
+                                padding: EdgeInsets.all(4),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Icon(Icons.camera_alt_rounded,
+                                size: 14, color: Colors.white),
+                      ),
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 16),
 

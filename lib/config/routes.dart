@@ -32,8 +32,11 @@ import 'package:kati_pilates/features/admin/classes/screens/class_definitions_sc
 import 'package:kati_pilates/features/admin/classes/screens/edit_class_definition_screen.dart';
 import 'package:kati_pilates/features/admin/studios/screens/studios_screen.dart';
 import 'package:kati_pilates/features/admin/instructors/screens/instructors_screen.dart';
+import 'package:kati_pilates/features/admin/clients/screens/create_card_screen.dart';
+import 'package:kati_pilates/features/admin/clients/screens/client_booking_history_screen.dart';
 import 'package:kati_pilates/shared/widgets/bottom_nav_bar.dart';
 import 'package:kati_pilates/shared/widgets/admin_bottom_nav_bar.dart';
+import 'package:kati_pilates/shared/widgets/waitlist_promotion_banner.dart';
 
 // ---------------------------------------------------------------------------
 // Route path constants
@@ -303,6 +306,18 @@ final GoRouter appRouter = GoRouter(
                         cardId: state.pathParameters['cardId']!,
                       ),
                     ),
+                    GoRoute(
+                      path: 'create-card',
+                      builder: (context, state) => CreateCardScreen(
+                        userId: state.pathParameters['userId']!,
+                      ),
+                    ),
+                    GoRoute(
+                      path: 'history',
+                      builder: (context, state) => ClientBookingHistoryScreen(
+                        userId: state.pathParameters['userId']!,
+                      ),
+                    ),
                   ],
                 ),
               ],
@@ -413,12 +428,14 @@ class _ClientShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: navigationShell,
-      bottomNavigationBar: BottomNavBar(
-        currentIndex: navigationShell.currentIndex,
-        onDestinationSelected: (index) =>
-            navigationShell.goBranch(index, initialLocation: index == navigationShell.currentIndex),
+    return WaitlistPromotionListener(
+      child: Scaffold(
+        body: navigationShell,
+        bottomNavigationBar: BottomNavBar(
+          currentIndex: navigationShell.currentIndex,
+          onDestinationSelected: (index) =>
+              navigationShell.goBranch(index, initialLocation: index == navigationShell.currentIndex),
+        ),
       ),
     );
   }
